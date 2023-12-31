@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        canvas {
+            display: block;
+            align-items: center;
+            margin: auto;
+            margin-top: 1%;
+            background-color: #f0f0f0;
+            border: 1px solid #000;
+            border-radius: 5px;
+        }
+
+        body {
+            background-color: #000;
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s ease-in-out;
+            border: none;
+            outline: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button:hover{
+            background-color: rgb(102, 251, 171);
+            color: #b00000;
+        }
+
+        img {
+            width: 40px;
+            height: 30px;
+        }
+        .buttons{
+            width: 200px;
+            margin: auto;
+            border: none;
+            outline: none;
+        }
+        .create p{
+            text-align: center;
+            color: gray;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="game" width="400" height="400"></canvas>
+    <button onclick="startGame()">Start</button>
+    <button onclick="pauseGame()">Pause</button>
+    <button onclick="resetGame()">Reset</button>
+    <br>
+    <div class="buttons">
+        <button onclick="changeDirection('up')"><img src="img/up-arrow.png" alt=""></button>
+        <button onclick="changeDirection('down')"><img src="img/down.png" alt=""></button>
+        <button onclick="changeDirection('left')"><img src="img/left-arrow.png" alt=""></button>
+        <button onclick="changeDirection('right')"><img src="img/right-arrow.png" alt=""></button>
+    </div>
+    <div class="create">
+        <p>create by mohamad oubouisk</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+
+        const tileSize = 20;
+        const numRows = canvas.height / tileSize;
+        const numCols = canvas.width / tileSize;
+
+        let snake = [{ x: numCols / 2, y: numRows / 2 }];
+        let food = generateFood();
+        let direction = { x: 0, y: 0 };
+        let newDirection = { x: 0, y: 0 };
+        let gameInterval;
+
+        document.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (direction.y === 0) newDirection = { x: 0, y: -1 };
+                    break;
+                case 'ArrowDown':
+                    if (direction.y === 0) newDirection = { x: 0, y: 1 };
+                    break;
+                case 'ArrowLeft':
+                    if (direction.x === 0) newDirection = { x: -1, y: 0 };
+                    break;
+                case 'ArrowRight':
+                    if (direction.x === 0) newDirection = { x: 1, y: 0 };
+                    break;
+            }
+        });
+
+        function gameLoop() {
+            direction = newDirection;
+            if (direction.x !== 0 || direction.y !== 0) {
+                const newHead = {
+                    x: (snake[0].x + direction.x + numCols) % numCols,
+                    y: (snake[0].y + direction.y + numRows) % numRows
+                };
+
+                if (snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
+                    // Snake hit itself, reset the game
+                    snake = [{ x: numCols / 2, y: numRows / 2 }];
+                    direction = { x: 0, y: 0 };
+                    newDirection = { x: 0, y: 0 };
+                } else {
+                    snake.unshift(newHead);
+
+                    if (newHead.x === food.x && newHead.y === food.y) {
+                        // Snake ate the food, generate a new food
+                        food = generateFood();
+                    } else {
+                        // Snake didn't eat the food, remove the tail
+                        snake.pop();
+                    }
+                }
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw snake
+            ctx.fillStyle = 'green';
+            for (const segment of snake) {
+                ctx.fillRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
+                ctx.strokeRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
+            }
+
+            // Draw food
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+            ctx.strokeRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+        }
+
+        function generateFood() {
+            let food = null;
+            while (food === null || snake.some(segment => segment.x === food.x && segment.y === food.y)) {
+                food = { x: Math.floor(Math.random() * numCols), y: Math.floor(Math.random() * numRows) };
+            }
+            return food;
+        }
+
+        function changeDirection(newDir) {
+            switch (newDir) {
+                case 'up':
+                    newDirection = { x: 0, y: -1 };
+                    break;
+                case 'down':
+                    newDirection = { x: 0, y: 1 };
+                    break;
+                case 'left':
+                    newDirection = { x: -1, y: 0 };
+                    break;
+                case 'right':
+                    newDirection = { x: 1, y: 0 };
+                    break;
+            }
+        }
+
+        function startGame() {
+            gameInterval = setInterval(gameLoop, 200);
+        }
+
+        function pauseGame() {
+            clearInterval(gameInterval);
+        }
+
+        function resetGame() {
+            snake = [{ x: numCols / 2, y: numRows / 2 }];
+            direction = { x: 0, y: 0 };
+            newDirection = { x: 0, y: 0 };
+            food = generateFood();
+            clearInterval(gameInterval);
+            gameLoop();
+        }
+    </script>
+</body>
+
+</html>
